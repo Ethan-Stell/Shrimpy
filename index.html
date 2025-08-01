@@ -45,7 +45,11 @@
     </style>
 </head>
 <body>
-    <div class="word-display" id="wordDisplay"></div>
+    <div class="word-display" id="wordDisplay">
+        <div id="startButton" style="font-size: 2rem; cursor: pointer; padding: 20px; background: rgba(255,255,255,0.2); border-radius: 10px; margin: 20px;">
+            Click to Start
+        </div>
+    </div>
 
     <script>
         class WordDisplay {
@@ -55,24 +59,28 @@
                 this.currentIndex = 0;
                 this.isPlaying = false;
                 this.audio = null;
-                
                 this.initializeElements();
                 this.loadAudio();
                 this.processExactTimings();
+                this.setupStartButton();
             }
 
             initializeElements() {
                 this.wordDisplay = document.getElementById('wordDisplay');
+                this.startButton = document.getElementById('startButton');
+            }
+
+            setupStartButton() {
+                this.startButton.addEventListener('click', () => {
+                    this.startButton.style.display = 'none';
+                    this.start();
+                });
             }
 
             loadAudio() {
                 this.audio = new Audio('squeaky_shrimp_segment.wav');
                 this.audio.addEventListener('canplaythrough', () => {
                     console.log('Audio loaded and ready');
-                    this.startAfterDelay();
-                });
-                this.audio.addEventListener('error', (e) => {
-                    console.error('Audio loading error:', e);
                 });
                 this.audio.load();
             }
@@ -112,19 +120,11 @@
                 console.log('Total timings:', this.wordTimings.length);
             }
 
-            startAfterDelay() {
-                setTimeout(() => this.start(), 3000);
-            }
-
             start() {
                 if (this.isPlaying) return;
-                
                 this.isPlaying = true;
                 this.currentIndex = 0;
-                
-                // Start the audio
                 this.audio.play().then(() => {
-                    console.log('Audio started playing');
                     this.showWord();
                     this.syncWithAudio();
                 }).catch(error => {
