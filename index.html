@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>shrimpy</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-image: url('shrimp.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .word-display {
+            font-size: 5rem;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-top: 40px;
+        }
+
+        .loading {
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .status {
+            margin-top: 1rem;
+            font-size: 1rem;
+            opacity: 0.8;
+            text-align: center;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="word-display" id="wordDisplay"></div>
+
+    <script>
+        class WordDisplay {
+            constructor() {
+                this.words = [];
+                this.wordTimings = [];
+                this.currentIndex = 0;
+                this.isPlaying = false;
+                this.audio = null;
+                
+                this.initializeElements();
+                this.loadAudio();
+                this.processExactTimings();
+            }
+
+            initializeElements() {
+                this.wordDisplay = document.getElementById('wordDisplay');
+            }
+
+            loadAudio() {
+                this.audio = new Audio('squeaky_shrimp_segment.wav');
+                this.audio.addEventListener('canplaythrough', () => {
+                    console.log('Audio loaded and ready');
+                    this.startAfterDelay();
+                });
+                this.audio.addEventListener('error', (e) => {
+                    console.error('Audio loading error:', e);
+                });
+                this.audio.load();
+            }
+
+            processExactTimings() {
+                // Exact timestamps with corrected transcription
+                this.words = [
+                    "My", "sister", "had", "a", "baby", "and", "I", "took", "it", "over",
+                    "because", "she", "passed", "away", "and", "then", "the",
+                    "baby", "lost", "its", "legs", "and", "its", "arms", "and", "now",
+                    "there's", "nothing", "but", "a", "stump", "but", "I", "still",
+                    "take", "care", "of", "it", "with", "my", "wife", "and", "it's",
+                    "growing", "and", "it's", "fairly", "happy", "but", "it's", "difficult",
+                    "because", "I've", "been", "working", "a", "second", "shift", "at", "the", "factory",
+                    "to", "put", "food", "on", "the", "table", "but", "all", "the", "love",
+                    "that", "I", "see", "in", "that", "little", "guy's", "face",
+                    "makes", "it", "worth", "it", "in", "the", "end", "True", "story"
+                ];
+
+                // Exact timestamps from the user (using start times)
+                this.wordTimings = [
+                    0.62, 1.10, 1.54, 1.78, 1.94, 2.50, 2.76, 2.96, 3.16, 3.32,
+                    3.58, 3.90, 4.14, 4.48, 5.30, 5.40, 5.56, 5.76, 6.00, 6.36,
+                    6.70, 6.96, 7.36, 7.52, 7.74, 8.04, 8.30, 8.54, 8.84, 8.98,
+                    9.12, 9.72, 9.82, 9.96, 10.16, 10.42, 10.66, 10.82, 10.90, 11.08,
+                    11.26, 11.96, 12.12, 12.82, 14.10, 14.22, 14.54, 15.36, 16.10, 16.58,
+                    16.68, 16.88, 17.18, 17.82, 18.24, 18.34, 18.62, 18.82, 18.98, 19.40,
+                    19.60, 19.74, 20.14, 20.48, 20.62, 20.94, 21.14, 21.34, 21.74, 22.12,
+                    22.26, 22.72, 22.92, 23.16, 23.54, 23.72, 23.94, 24.10, 24.22, 24.58,
+                    25.04, 25.26, 25.84, 26.02, 26.26, 26.46, 26.68, 26.82, 27.16, 29.18,
+                    30.06
+                ];
+
+                console.log('Processed words:', this.words);
+                console.log('Word timings:', this.wordTimings);
+                console.log('Total words:', this.words.length);
+                console.log('Total timings:', this.wordTimings.length);
+            }
+
+            startAfterDelay() {
+                setTimeout(() => this.start(), 3000);
+            }
+
+            start() {
+                if (this.isPlaying) return;
+                
+                this.isPlaying = true;
+                this.currentIndex = 0;
+                
+                // Start the audio
+                this.audio.play().then(() => {
+                    console.log('Audio started playing');
+                    this.showWord();
+                    this.syncWithAudio();
+                }).catch(error => {
+                    console.error('Error playing audio:', error);
+                });
+            }
+
+            syncWithAudio() {
+                if (!this.isPlaying || !this.audio) return;
+                const currentTime = this.audio.currentTime;
+                const targetTime = this.wordTimings[this.currentIndex] || 0;
+                
+                // Only show words if we haven't reached the end of the word list
+                if (this.currentIndex < this.words.length && currentTime >= targetTime) {
+                    this.showWord();
+                    this.currentIndex++;
+                }
+                
+                // Continue syncing until audio ends naturally
+                if (!this.audio.ended) {
+                    requestAnimationFrame(() => this.syncWithAudio());
+                } else {
+                    this.stop();
+                }
+            }
+
+            stop() {
+                this.isPlaying = false;
+                if (this.audio) {
+                    this.audio.pause();
+                    this.audio.currentTime = 0;
+                }
+                this.currentIndex = 0;
+                this.wordDisplay.innerHTML = "";
+                
+                console.log('Story stopped and completed');
+            }
+
+            showWord() {
+                if (this.currentIndex < this.words.length) {
+                    // Force the word to be visible
+                    const currentWord = this.words[this.currentIndex];
+                    this.wordDisplay.innerHTML = `<div style="font-size: 5rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); color: white;">${currentWord}</div>`;
+                    
+                    console.log(`Showing word: ${currentWord} at time: ${this.audio.currentTime}`);
+                }
+            }
+
+            updateDisplay() {
+                if (this.currentIndex < this.words.length) {
+                    this.wordDisplay.textContent = this.words[this.currentIndex];
+                } else {
+                    this.wordDisplay.textContent = "Story Complete";
+                }
+            }
+
+            testWordDisplay() {
+                this.wordDisplay.innerHTML = '<div style="font-size: 5rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); color: white;">TEST WORD</div>';
+                console.log('Test word displayed');
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new WordDisplay();
+        });
+    </script>
+</body>
+</html>
